@@ -2,17 +2,10 @@ import { db } from "@/lib/db";
 import { t, isLocale } from "@/i18n/dict";
 import { L, ProductCard } from "@/components/site";
 import { productInclude } from "@/modules/catalog/service";
-import { SECTOR_LINKS } from "@/content/pages";
+import { sectorLinks } from "@/content/pages";
 import { HeroScene, CategoryArt, KraftBag, TakeawayBox, CustomPrint, Container } from "@/components/illustrations";
 import { Reveal } from "@/components/motion";
 import { PresentationFilm } from "@/components/presentation-film";
-
-const STEPS: [string, string][] = [
-  ["Choisissez", "Parcourez le catalogue ou décrivez votre besoin dans une demande de devis."],
-  ["Commandez", "Panier en ligne, prix par paliers de quantité, devis transformé en commande."],
-  ["Payez", "Moyens de paiement disponibles affichés à la commande, paiement confirmé seulement après vérification, acompte possible sur devis."],
-  ["Recevez", "Préparation, expédition et suivi de commande depuis votre espace."],
-];
 
 export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -40,14 +33,14 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             <div className="anim-fade-up anim-delay-3 mt-8 flex flex-wrap gap-3">
               <L locale={locale} href="/catalogue" className="btn btn-secondary">{d.home.ctaCatalogue}</L>
               <L locale={locale} href="/devis" className="btn border border-beige text-beige hover:bg-white/10">{d.home.ctaQuote}</L>
-              <a href="#presentation" className="btn text-beige underline-offset-4 hover:underline">▶ Voir la présentation</a>
+              <a href="#presentation" className="btn text-beige underline-offset-4 hover:underline">▶ {d.home.watch}</a>
             </div>
           </div>
           <div className="hidden justify-center md:flex"><HeroScene /></div>
         </div>
         <div className="relative overflow-hidden border-t border-white/10 bg-black/10 py-3" aria-hidden>
           <div className="marquee gap-10 text-sm font-semibold uppercase tracking-[0.2em] text-beige/80">
-            {[...SECTOR_LINKS, ...SECTOR_LINKS].map(([slug, label], n) => <span key={`${slug}-${n}`} className="flex items-center gap-10 whitespace-nowrap">{label}<span className="text-beige/40">✦</span></span>)}
+            {[...sectorLinks(locale), ...sectorLinks(locale)].map(([slug, label], n) => <span key={`${slug}-${n}`} className="flex items-center gap-10 whitespace-nowrap">{label}<span className="text-beige/40">✦</span></span>)}
           </div>
         </div>
       </section>
@@ -62,8 +55,8 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
               </span>
               <span className="flex flex-col gap-1">
                 <span className="text-lg font-semibold text-vert">{locale === "en" ? c.nameEn : c.nameFr}</span>
-                <span className="text-sm text-noir/70">{c.descFr}</span>
-                <span className="text-xs text-noir/50">{c._count.products > 0 ? `${c._count.products} produit(s)` : "Sur demande"}</span>
+                <span className="text-sm text-noir/70">{locale === "en" ? (c.descEn || c.descFr) : c.descFr}</span>
+                <span className="text-xs text-noir/50">{c._count.products > 0 ? `${c._count.products} ${d.home.products}` : d.home.onRequest}</span>
               </span>
             </L>
           ))}
@@ -73,11 +66,12 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       <section id="presentation" className="scroll-mt-24 bg-white py-16">
         <Reveal className="mx-auto max-w-6xl px-4">
           <div data-reveal className="mb-8 text-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-vert2">Présentation</p>
-            <h2 className="mt-2 text-3xl md:text-4xl">Découvrez MBOUMINA PACK en une minute</h2>
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-vert2">{d.home.presentationKicker}</p>
+            <h2 className="mt-2 text-3xl md:text-4xl">{d.home.presentationTitle}</h2>
           </div>
           <div data-reveal>
             <PresentationFilm
+              locale={locale}
               videoUrl={s["home.video_url"]}
               ctaQuote={<L locale={locale} href="/devis" className="btn btn-secondary">{d.home.ctaQuote}</L>}
               ctaCatalogue={<L locale={locale} href="/catalogue" className="btn border border-beige text-beige hover:bg-white/10">{d.home.ctaCatalogue}</L>}
@@ -103,9 +97,9 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       ) : null}
 
       <Reveal as="section" className="mx-auto max-w-7xl px-4 py-14">
-        <h2 data-reveal className="text-3xl">Comment ça marche</h2>
+        <h2 data-reveal className="text-3xl">{d.home.howTitle}</h2>
         <ol className="mt-8 grid gap-6 md:grid-cols-4">
-          {STEPS.map(([title, text], n) => (
+          {d.home.steps.map(([title, text], n) => (
             <li key={title} data-reveal className="relative rounded-2xl border border-beige bg-white p-6">
               <span className="flex h-11 w-11 items-center justify-center rounded-full bg-vert text-lg font-bold text-beige">{n + 1}</span>
               <h3 className="mt-4 text-xl">{title}</h3>
@@ -120,11 +114,11 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           <h2 data-reveal className="text-3xl">{d.home.services}</h2>
           <div className="mt-8 grid gap-6 md:grid-cols-4">
             {([
-              ["Vente au détail", "Commandez au paquet ou au carton, directement en ligne.", "/vente-au-detail", KraftBag],
-              ["Vente en gros", "Prix par paliers de quantité et tarifs négociés pour les volumes.", "/vente-en-gros", Container],
-              ["Personnalisation", "Vos emballages à vos couleurs, réalisés par nos partenaires après validation du BAT.", "/personnalisation", CustomPrint],
-              ["Espace professionnel", "Comptes entreprise, bons de commande, validation interne, factures.", "/pro", TakeawayBox],
-            ] as const).map(([title, text, href, Art]) => (
+              ["/vente-au-detail", KraftBag],
+              ["/vente-en-gros", Container],
+              ["/personnalisation", CustomPrint],
+              ["/pro", TakeawayBox],
+            ] as const).map(([href, Art], n) => [d.home.servicesList[n][0], d.home.servicesList[n][1], href, Art] as const).map(([title, text, href, Art]) => (
               <L key={href} data-reveal locale={locale} href={href} className="lift rounded-xl border border-beige p-6 hover:border-vert2">
                 <Art className="lift-art h-16 w-16" />
                 <h3 className="mt-3 text-xl">{title}</h3>
@@ -138,7 +132,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       <Reveal as="section" className="mx-auto max-w-7xl px-4 py-14">
         <h2 data-reveal className="text-3xl">{d.home.sectors}</h2>
         <div className="mt-6 flex flex-wrap gap-3">
-          {SECTOR_LINKS.map(([slug, label]) => <L key={slug} data-reveal locale={locale} href={`/${slug}`} className="btn btn-ghost hover:bg-vert hover:text-white">{label}</L>)}
+          {sectorLinks(locale).map(([slug, label]) => <L key={slug} data-reveal locale={locale} href={`/${slug}`} className="btn btn-ghost hover:bg-vert hover:text-white">{label}</L>)}
         </div>
       </Reveal>
 
@@ -146,12 +140,12 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
         <TakeawayBox className="anim-float pointer-events-none absolute -right-6 -top-6 h-40 w-40 opacity-30" />
         <Reveal className="relative mx-auto flex max-w-7xl flex-col items-start gap-6 px-4 md:flex-row md:items-center">
           <div data-reveal className="flex-1">
-            <h2 className="text-3xl">Un projet, un volume, une question ?</h2>
-            <p className="mt-2 text-noir/80">Décrivez votre besoin : notre équipe commerciale vous répond avec une proposition chiffrée.</p>
+            <h2 className="text-3xl">{d.home.ctaTitle}</h2>
+            <p className="mt-2 text-noir/80">{d.home.ctaText}</p>
           </div>
           <div data-reveal className="flex gap-3">
             <L locale={locale} href="/devis" className="btn btn-primary">{d.home.ctaQuote}</L>
-            <L locale={locale} href="/echantillons" className="btn btn-ghost">Demander des échantillons</L>
+            <L locale={locale} href="/echantillons" className="btn btn-ghost">{d.home.ctaSamples}</L>
           </div>
         </Reveal>
       </section>

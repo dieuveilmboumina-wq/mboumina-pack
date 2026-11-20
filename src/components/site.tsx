@@ -4,7 +4,7 @@ import { currentUser } from "@/lib/auth";
 import { isStaff } from "@/lib/permissions";
 import { getCart } from "@/modules/cart/service";
 import { t, type Locale } from "@/i18n/dict";
-import { SECTOR_LINKS } from "@/content/pages";
+import { sectorLinks } from "@/content/pages";
 import { formatMoney } from "@/lib/money";
 import { displayPrice, availability, type ProductFull } from "@/modules/catalog/service";
 import { KraftBag, Cup, TakeawayBox, CategoryArt } from "@/components/illustrations";
@@ -108,7 +108,7 @@ export async function Footer({ locale }: { locale: Locale }) {
           <NewsletterForm locale={locale} />
         </div>
         {col("Catalogue", cats.map((c) => [`/categorie/${c.slug}`, locale === "en" ? c.nameEn : c.nameFr]))}
-        {col("Solutions", SECTOR_LINKS.map(([s, l]) => [`/${s}`, l]))}
+        {col("Solutions", sectorLinks(locale).map(([s, l]) => [`/${s}`, l]))}
         {col("Entreprise", [["/a-propos", "À propos"], ["/fondateur", "Notre fondateur"], ["/valeurs", "Nos valeurs"], ["/engagements", "Nos engagements"], ["/fournisseurs-partenaires", "Fournisseurs et partenaires"], ["/garanties-qualite", "Garanties qualité"], ["/conformite", "Conformité"], ["/actualites", "Actualités"], ["/recrutement", "Recrutement"], ["/partenariat", "Partenariat"]])}
         {col("Aide", [["/faq", "FAQ"], ["/contact", "Contact"], ["/suivi", "Suivi de livraison"], ["/echantillons", "Demande d'échantillons"], ["/vente-au-detail", "Vente au détail"], ["/cgv", "Conditions générales de vente"], ["/confidentialite", "Confidentialité"], ["/retours", "Politique de retour"]])}
       </div>
@@ -144,7 +144,7 @@ export function ProductCard({ p, locale }: { p: ProductFull; locale: string }) {
           // Pas encore de photo : pictogramme de la famille d'emballage (signalé comme illustration)
           <span className="flex flex-col items-center gap-2">
             <CategoryArt slug={p.category?.slug ?? ""} className="lift-art h-24 w-24 opacity-80" />
-            <span className="text-[10px] uppercase tracking-wider text-noir/40">Illustration</span>
+            <span className="text-[10px] uppercase tracking-wider text-noir/40">{d.illustration}</span>
           </span>
         )}
       </div>

@@ -189,3 +189,17 @@ export const SECTOR_LINKS = [
   ["solutions-industriels", "Industriels"],
   ["solutions-distributeurs", "Distributeurs"],
 ] as const;
+
+const SECTOR_EN: Record<string, string> = {
+  "solutions-restaurants": "Restaurants",
+  "solutions-hotels": "Hotels",
+  "solutions-supermarches": "Supermarkets",
+  "solutions-traiteurs": "Caterers",
+  "solutions-industriels": "Manufacturers",
+  "solutions-distributeurs": "Distributors",
+};
+
+/** Libellés des métiers dans la langue demandée. */
+export function sectorLinks(locale: string): [string, string][] {
+  return SECTOR_LINKS.map(([s, l]) => [s, locale === "en" ? SECTOR_EN[s] ?? l : l]);
+}
