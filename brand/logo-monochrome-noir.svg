@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 80" role="img" aria-label="MBOUMINA PACK">
+  <g transform="translate(8 8)" fill="#171A18">
+    <path d="M14 19 L32 31 L32 54 L14 43 Z"/>
+    <path d="M33.5 32 L50 21 L50 43 L33.5 53 Z"/>
+    <path d="M32 28 C30 19 35 12 44 10 C44 19 39 26 32 28 Z"/>
+  </g>
+  <text x="80" y="44" font-family="Fraunces, 'Playfair Display', Georgia, serif" font-weight="700" font-size="30" letter-spacing="1.5" fill="#171A18">MBOUMINA</text>
+  <rect x="81" y="54" width="34" height="2" fill="#171A18"/>
+  <text x="123" y="61" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="600" font-size="12" letter-spacing="7" fill="#171A18">PACK</text>
+</svg>

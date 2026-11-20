@@ -1,0 +1,59 @@
+# Blueprint Render — MBOUMINA PACK (aperçu privé).
+# Crée : un service web Node.js, une base PostgreSQL et un disque persistant pour les fichiers clients.
+# Mode d'emploi : docs/06-publication-render.md
+# Région Francfort : la plus proche de l'Afrique de l'Ouest et centrale parmi celles proposées par Render.
+
+services:
+  - type: web
+    name: mboumina-pack
+    runtime: node
+    region: frankfurt
+    plan: starter # le disque persistant exige une offre payante
+    buildCommand: >-
+      npm ci --include=dev &&
+      node scripts/prisma-postgres.mjs --check &&
+      npx prisma generate --schema prisma/postgres/schema.prisma &&
+      npm run build
+    # Avant chaque mise en ligne : migrations de la base, puis données de référence (idempotent, n'écrase rien).
+    preDeployCommand: >-
+      npx prisma migrate deploy --schema prisma/postgres/schema.prisma &&
+      npx tsx prisma/seed.ts
+    startCommand: npm start
+    healthCheckPath: /api/health
+    disk:
+      name: fichiers-clients
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mboumina-db
+          property: connectionString
+      - key: APP_SECRET
+        generateValue: true # secret aléatoire généré par Render, jamais versionné
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+      - key: PAYMENT_TEST_MODE
+        value: "false" # le simulateur est de toute façon refusé en production
+      # À saisir dans le tableau de bord Render lors de la création (jamais dans ce fichier) :
+      - key: APP_URL # ex. https://mboumina-pack.onrender.com
+        sync: false
+      - key: PREVIEW_PASSWORD # mot de passe de l'aperçu privé ; supprimer pour ouvrir le site au public
+        sync: false
+      - key: FOUNDER_EMAIL
+        sync: false
+      - key: FOUNDER_INITIAL_PASSWORD
+        sync: false
+
+databases:
+  - name: mboumina-db
+    region: frankfurt
+    plan: basic-256mb
+    databaseName: mboumina
+    user: mboumina
+    postgresMajorVersion: "16"
+    ipAllowList: [] # accessible uniquement depuis les services Render (réseau privé)

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 250" role="img" aria-label="MBOUMINA PACK — Votre partenaire en solutions d'emballage alimentaire">
+  <g transform="translate(120 10) scale(1.25)">
+    <rect width="64" height="64" rx="14" fill="#183D30"/>
+    <path d="M14 19 L32 31 L32 54 L14 43 Z" fill="#E7D9B8"/>
+    <path d="M32 31 L50 19 L50 43 L32 54 Z" fill="#C8B68E"/>
+    <path d="M32 28 C30 19 35 12 44 10 C44 19 39 26 32 28 Z" fill="#E7D9B8"/>
+    <path d="M32.5 27 C35 22 38 17 42 12.5" stroke="#183D30" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  </g>
+  <text x="160" y="140" text-anchor="middle" font-family="Fraunces, 'Playfair Display', Georgia, serif" font-weight="700" font-size="40" letter-spacing="2" fill="#183D30">MBOUMINA</text>
+  <rect x="96" y="160" width="36" height="2" fill="#315B45"/>
+  <text x="164" y="166" text-anchor="middle" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-weight="600" font-size="14" letter-spacing="8" fill="#315B45">PACK</text>
+  <rect x="196" y="160" width="36" height="2" fill="#315B45"/>
+  <text x="160" y="200" text-anchor="middle" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-style="italic" font-size="12" fill="#171A18">Votre partenaire en solutions d'emballage alimentaire</text>
+</svg>

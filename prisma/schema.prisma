@@ -1,0 +1,870 @@
+// MBOUMINA PACK — schéma de base de données
+// Montants : entiers en unité mineure de la devise (centimes ; FCFA = unité entière).
+// Taux (taxes, remises) : points de base (1 % = 100 bp).
+// Les "énumérations" sont des chaînes validées dans src/lib/constants.ts (compatibilité SQLite/PostgreSQL).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────── Identité, accès, sécurité ─────────────
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  passwordHash     String
+  name             String
+  phone            String?
+  locale           String    @default("fr")
+  role             String    @default("customer") // customer | founder | admin | sales | stock | accountant | picker | logistics
+  companyId        String?
+  company          Company?  @relation(fields: [companyId], references: [id])
+  companyRole      String?   // owner | buyer | approver | viewer
+  totpSecret       String?
+  totpEnabled      Boolean   @default(false)
+  emailVerifiedAt  DateTime?
+  marketingConsent Boolean   @default(false)
+  disabledAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  sessions       Session[]
+  addresses      Address[]
+  orders         Order[]
+  quotes         Quote[]
+  favorites      Favorite[]
+  reviews        Review[]
+  carts          Cart[]
+  customizations CustomizationRequest[]
+  complaints     Complaint[]
+  returns        ReturnRequest[]
+  resetTokens    PasswordResetToken[]
+  auditLogs      AuditLog[]
+}
+
+model Session {
+  id         String   @id // hachage SHA-256 du jeton ; le jeton brut n'est jamais stocké
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+}
+
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  ip        String
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([ip, createdAt])
+}
+
+model PasswordResetToken {
+  id        String    @id // hachage du jeton
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  data      String?  // JSON
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model Feature {
+  code       Int       @id // 1..500
+  module     Int
+  moduleName String
+  name       String
+  phase      Int
+  status     String    @default("todo") // todo | in_progress | done | blocked
+  verifiedAt DateTime?
+  notes      String?
+}
+
+// ───────────── Clients B2B / B2C ─────────────
+
+model Company {
+  id             String    @id @default(cuid())
+  name           String
+  legalId        String?   // NINEA, RCCM, SIRET… selon le pays
+  vatNumber      String?
+  country        String
+  sector         String?   // restaurant | hotel | supermarket | caterer | industry | distributor | other
+  status         String    @default("pending") // pending | verified | rejected
+  verifiedAt     DateTime?
+  verifiedById   String?
+  creditLimit    Int?      // null = aucun crédit ; défini uniquement après autorisation
+  paymentTermsDays Int?
+  approvalThreshold Int?   // montant au-delà duquel un approbateur doit valider
+  salesRepId     String?
+  createdAt      DateTime  @default(now())
+
+  users     User[]
+  addresses Address[]
+  orders    Order[]
+  quotes    Quote[]
+  prices    NegotiatedPrice[]
+}
+
+model NegotiatedPrice {
+  id             String   @id @default(cuid())
+  companyId      String
+  company        Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  variantId      String
+  variant        ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  unitPriceMinor Int
+  currency       String
+  validUntil     DateTime?
+
+  @@unique([companyId, variantId])
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  label     String?
+  fullName  String
+  phone     String
+  line1     String
+  line2     String?
+  city      String
+  region    String?
+  postalCode String?
+  country   String   // ISO 3166-1 alpha-2
+  isDefault Boolean  @default(false)
+}
+
+// ───────────── Catalogue ─────────────
+
+model Category {
+  id        String     @id @default(cuid())
+  slug      String     @unique
+  nameFr    String
+  nameEn    String
+  descFr    String?
+  descEn    String?
+  parentId  String?
+  parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryTree")
+  sort      Int        @default(0)
+  products  Product[]
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  sku             String   @unique
+  slug            String   @unique
+  nameFr          String
+  nameEn          String
+  categoryId      String
+  category        Category @relation(fields: [categoryId], references: [id])
+  descCommercialFr String  @default("")
+  descCommercialEn String  @default("")
+  descTechnicalFr String   @default("")
+  descTechnicalEn String   @default("")
+  materials       String   @default("")
+  dimensions      String   @default("")
+  capacity        String   @default("")
+  colors          String   @default("")
+  finishes        String   @default("")
+  weightGrams     Int?
+  unitsPerPack    Int?
+  unitsPerCarton  Int?
+  moq             Int      @default(1)
+  status          String   @default("draft") // draft | active | archived
+  isFeatured      Boolean  @default(false)
+  isNew           Boolean  @default(false)
+  isEco           Boolean  @default(false)
+  isCustomizable  Boolean  @default(false)
+  foodContact     Boolean  @default(true)
+  sourcingMode    String   @default("stock") // stock | partner_on_order
+  supplierId      String?
+  supplier        Supplier? @relation(fields: [supplierId], references: [id])
+  leadTimeDays    Int?     // délai d'approvisionnement
+  shipTimeDays    Int?     // délai d'expédition
+  originCountry   String?
+  videoUrl        String?
+  seoTitle        String?
+  seoDescription  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  variants   ProductVariant[]
+  media      ProductMedia[]
+  documents  ProductDocument[]
+  reviews    Review[]
+  favorites  Favorite[]
+  customizations CustomizationRequest[]
+
+  @@index([status, categoryId])
+}
+
+model ProductVariant {
+  id               String   @id @default(cuid())
+  productId        String
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku              String   @unique
+  label            String   @default("Standard") // ex. "500 ml — kraft"
+  currency         String   @default("XOF")
+  purchaseCostMinor Int?    // prix d'achat de référence (dernier coût connu)
+  priceMinor       Int?     // prix unitaire de détail ; null = prix sur devis
+  promoPriceMinor  Int?
+  promoStartsAt    DateTime?
+  promoEndsAt      DateTime?
+  taxRateBp        Int?     // null = taux du pays
+  active           Boolean  @default(true)
+
+  tiers        PriceTier[]
+  stockLevels  StockLevel[]
+  movements    StockMovement[]
+  cartItems    CartItem[]
+  orderLines   OrderLine[]
+  supplierItems SupplierProduct[]
+  poLines      PurchaseOrderLine[]
+  negotiated   NegotiatedPrice[]
+}
+
+model PriceTier {
+  id             String  @id @default(cuid())
+  variantId      String
+  variant        ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  minQty         Int
+  label          String  // détail | intermédiaire | professionnel | grossiste
+  unitPriceMinor Int?    // null = négociable (sur devis)
+  negotiable     Boolean @default(false)
+
+  @@unique([variantId, minQty])
+}
+
+model ProductMedia {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  kind      String  @default("image") // image | video
+  url       String
+  alt       String  @default("")
+  sort      Int     @default(0)
+}
+
+model ProductDocument {
+  id           String    @id @default(cuid())
+  productId    String
+  product      Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  kind         String    // datasheet | declaration | certificate | material | test_report | migration
+  title        String
+  fileId       String
+  issuer       String?
+  country      String?   // juridiction concernée
+  verifiedAt   DateTime? // affiché "vérifié" uniquement si renseigné
+  verifiedById String?
+  validUntil   DateTime?
+  isPublic     Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int
+  body      String
+  verifiedPurchase Boolean @default(false)
+  status    String   @default("pending") // pending | approved | rejected
+  createdAt DateTime @default(now())
+}
+
+model Favorite {
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, productId])
+}
+
+// ───────────── Fournisseurs, achats, stocks ─────────────
+
+model Supplier {
+  id        String   @id @default(cuid())
+  name      String
+  country   String?
+  contactName String?
+  email     String?
+  phone     String?
+  kind      String   @default("supplier") // supplier | printer_partner | carrier_partner
+  paymentTermsDays Int?
+  rating    Int?     // 1..5, évaluation interne
+  notes     String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  products       Product[]
+  items          SupplierProduct[]
+  purchaseOrders PurchaseOrder[]
+  customizations CustomizationRequest[]
+}
+
+model SupplierProduct {
+  id           String   @id @default(cuid())
+  supplierId   String
+  supplier     Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  variantId    String
+  variant      ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  supplierSku  String?
+  costMinor    Int
+  currency     String
+  moq          Int?
+  leadTimeDays Int?
+  quotedAt     DateTime @default(now())
+
+  @@unique([supplierId, variantId])
+}
+
+model Warehouse {
+  id      String  @id @default(cuid())
+  code    String  @unique
+  name    String
+  country String
+  city    String
+  active  Boolean @default(true)
+
+  stock     StockLevel[]
+  movements StockMovement[]
+  purchaseOrders PurchaseOrder[]
+}
+
+model StockLevel {
+  variantId    String
+  variant      ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  warehouseId  String
+  warehouse    Warehouse @relation(fields: [warehouseId], references: [id])
+  onHand       Int     @default(0)
+  reserved     Int     @default(0)
+  blocked      Int     @default(0)
+  minLevel     Int?
+  maxLevel     Int?
+  avgCostMinor Int?    // coût moyen pondéré
+
+  @@id([variantId, warehouseId])
+}
+
+model StockMovement {
+  id          String   @id @default(cuid())
+  variantId   String
+  variant     ProductVariant @relation(fields: [variantId], references: [id])
+  warehouseId String
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+  type        String   // receipt | sale | transfer_in | transfer_out | adjustment | return | reserve | release | block | unblock
+  qty         Int      // signé pour onHand
+  unitCostMinor Int?
+  lot         String?
+  refType     String?
+  refId       String?
+  userId      String?
+  note        String?
+  createdAt   DateTime @default(now())
+
+  @@index([variantId, createdAt])
+}
+
+model PurchaseOrder {
+  id          String   @id @default(cuid())
+  number      String   @unique
+  supplierId  String
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
+  warehouseId String
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+  status      String   @default("draft") // draft | pending_approval | approved | sent | partially_received | received | cancelled
+  currency    String
+  freightMinor Int     @default(0)
+  dutiesMinor  Int     @default(0)
+  otherCostsMinor Int  @default(0)
+  expectedAt  DateTime?
+  linkedOrderId String? // achat direct après commande client (mode partner_on_order)
+  createdById String?
+  approvedById String?
+  approvedAt  DateTime?
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  lines    PurchaseOrderLine[]
+  receipts GoodsReceipt[]
+}
+
+model PurchaseOrderLine {
+  id            String  @id @default(cuid())
+  poId          String
+  po            PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
+  variantId     String
+  variant       ProductVariant @relation(fields: [variantId], references: [id])
+  qty           Int
+  unitCostMinor Int
+  receivedQty   Int     @default(0)
+  rejectedQty   Int     @default(0)
+}
+
+model GoodsReceipt {
+  id         String   @id @default(cuid())
+  poId       String
+  po         PurchaseOrder @relation(fields: [poId], references: [id])
+  receivedAt DateTime @default(now())
+  userId     String?
+  notes      String?
+  lines      GoodsReceiptLine[]
+}
+
+model GoodsReceiptLine {
+  id          String  @id @default(cuid())
+  receiptId   String
+  receipt     GoodsReceipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  poLineId    String
+  acceptedQty Int
+  rejectedQty Int     @default(0)
+  lot         String?
+  inspection  String? // JSON : checklist de contrôle à réception
+  nonConformity String?
+}
+
+// ───────────── Panier, commandes, devis ─────────────
+
+model Cart {
+  id        String     @id @default(cuid())
+  token     String     @unique
+  userId    String?
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currency  String     @default("XOF")
+  couponCode String?
+  updatedAt DateTime   @updatedAt
+  createdAt DateTime   @default(now())
+  items     CartItem[]
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  qty       Int
+
+  @@unique([cartId, variantId])
+}
+
+model Order {
+  id            String   @id @default(cuid())
+  number        String   @unique
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  companyId     String?
+  company       Company? @relation(fields: [companyId], references: [id])
+  email         String
+  status        String   @default("pending_payment") // pending_approval | pending_payment | partially_paid | paid | processing | packed | shipped | delivered | completed | cancelled | refunded
+  currency      String
+  subtotalMinor Int
+  discountMinor Int      @default(0)
+  shippingMinor Int      @default(0)
+  taxMinor      Int      @default(0)
+  totalMinor    Int
+  paidMinor     Int      @default(0)
+  depositPercent Int?    // acompte demandé (%)
+  couponCode    String?
+  shippingAddress String // JSON figé au moment de la commande
+  billingAddress  String?
+  shippingRateId String?
+  shippingService String?
+  poReference   String?
+  urgent        Boolean  @default(false)
+  scheduledFor  DateTime?
+  notes         String?
+  approvedById  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  lines     OrderLine[]
+  events    OrderEvent[]
+  payments  Payment[]
+  invoices  Invoice[]
+  shipments Shipment[]
+  returns   ReturnRequest[]
+  complaints Complaint[]
+}
+
+model OrderLine {
+  id             String  @id @default(cuid())
+  orderId        String
+  order          Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variantId      String? // vide pour une ligne hors catalogue issue d'un devis (ex. emballage personnalisé fabriqué par un partenaire)
+  variant        ProductVariant? @relation(fields: [variantId], references: [id])
+  sku            String
+  name           String
+  qty            Int
+  unitPriceMinor Int
+  unitCostMinor  Int?
+  taxRateBp      Int     @default(0)
+  lineTotalMinor Int
+  pickedQty      Int     @default(0)
+}
+
+model OrderEvent {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    String
+  note      String?
+  userId    String?
+  visibleToCustomer Boolean @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Quote {
+  id            String   @id @default(cuid())
+  number        String   @unique
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  companyId     String?
+  company       Company? @relation(fields: [companyId], references: [id])
+  contactName   String
+  email         String
+  phone         String?
+  companyName   String?
+  country       String?
+  kind          String   @default("standard") // standard | custom | b2b | sample
+  status        String   @default("requested") // requested | draft | sent | accepted | rejected | expired | converted | revised
+  request       String   // besoin exprimé par le client
+  currency      String   @default("XOF")
+  subtotalMinor Int      @default(0)
+  discountMinor Int      @default(0)
+  shippingMinor Int      @default(0)
+  taxMinor      Int      @default(0)
+  totalMinor    Int      @default(0)
+  validUntil    DateTime?
+  revision      Int      @default(1)
+  orderId       String?
+  assignedToId  String?
+  lastReminderAt DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  lines QuoteLine[]
+}
+
+model QuoteLine {
+  id             String  @id @default(cuid())
+  quoteId        String
+  quote          Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  variantId      String?
+  description    String
+  qty            Int
+  unitPriceMinor Int     @default(0)
+  taxRateBp      Int     @default(0)
+}
+
+model CustomizationRequest {
+  id          String   @id @default(cuid())
+  number      String   @unique
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  contactName String
+  email       String
+  phone       String?
+  companyName String?
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
+  packagingType String
+  dimensions  String?
+  material    String?
+  colors      String?
+  finish      String?
+  printSides  String?  // recto | recto_verso
+  printText   String?
+  quantity    Int
+  description String
+  design      String?  // JSON : positionnement logo, couleurs, texte (configurateur)
+  logoFileId  String?
+  artworkFileId String?
+  wantsMockup Boolean  @default(true)
+  status      String   @default("submitted") // submitted | reviewing | sent_to_partner | mockup_sent | quoted | bat_sent | bat_approved | confirmed | in_production | delivered | cancelled
+  partnerId   String?
+  partner     Supplier? @relation(fields: [partnerId], references: [id])
+  priceConfirmed       Boolean @default(false)
+  leadTimeConfirmed    Boolean @default(false)
+  feasibilityConfirmed Boolean @default(false)
+  batApprovedAt DateTime?
+  quoteId     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SampleRequest {
+  id          String   @id @default(cuid())
+  contactName String
+  email       String
+  phone       String?
+  companyName String?
+  country     String
+  city        String
+  products    String
+  message     String?
+  status      String   @default("new") // new | approved | sent | declined
+  createdAt   DateTime @default(now())
+}
+
+model UploadedFile {
+  id           String   @id @default(cuid())
+  ownerId      String?
+  originalName String
+  storedPath   String
+  mime         String
+  size         Int
+  sha256       String
+  scanStatus   String   @default("pending") // pending | clean | infected | skipped
+  createdAt    DateTime @default(now())
+}
+
+// ───────────── Paiements, facturation ─────────────
+
+model Payment {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id])
+  provider    String   // manual_transfer | wave | orange_money | card | cash_on_delivery | test
+  kind        String   @default("full") // full | deposit | balance | refund
+  status      String   @default("initiated") // initiated | pending | succeeded | failed | cancelled | refunded
+  amountMinor Int
+  currency    String
+  providerRef String?  @unique
+  verifiedAt  DateTime? // renseigné uniquement après vérification serveur (webhook signé / API / rapprochement bancaire)
+  verifiedBy  String?   // "webhook" | "api" | id utilisateur (rapprochement manuel)
+  failureReason String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WebhookEvent {
+  id         String   @id // id d'événement prestataire (idempotence)
+  provider   String
+  payload    String
+  receivedAt DateTime @default(now())
+  processedAt DateTime?
+  error      String?
+}
+
+model Invoice {
+  id         String   @id @default(cuid())
+  number     String   @unique
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  kind       String   @default("invoice") // invoice | credit_note | proforma
+  currency   String
+  totalMinor Int
+  taxMinor   Int
+  issuedAt   DateTime @default(now())
+}
+
+model Coupon {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  kind        String    // percent | fixed
+  value       Int       // bp pour percent, unité mineure pour fixed
+  currency    String?
+  minSubtotalMinor Int?
+  startsAt    DateTime?
+  endsAt      DateTime?
+  maxUses     Int?
+  usedCount   Int       @default(0)
+  active      Boolean   @default(true)
+}
+
+// ───────────── Logistique, international ─────────────
+
+model Country {
+  code      String  @id // ISO alpha-2
+  nameFr    String
+  nameEn    String
+  currency  String
+  timezone  String
+  taxRateBp Int?    // null = non configuré (aucune taxe appliquée tant que non défini par l'admin)
+  taxLabel  String?
+  sellingEnabled Boolean @default(false)
+}
+
+model Currency {
+  code     String @id
+  symbol   String
+  decimals Int
+  active   Boolean @default(true)
+}
+
+model ExchangeRate {
+  id        String   @id @default(cuid())
+  base      String
+  quote     String
+  rate      String   // décimal en texte pour ne pas perdre de précision
+  source    String
+  fetchedAt DateTime
+
+  @@index([base, quote, fetchedAt])
+}
+
+model Carrier {
+  id                  String  @id @default(cuid())
+  name                String
+  trackingUrlTemplate String? // ex. https://transporteur/suivi/{tracking}
+  contractRef         String?
+  active              Boolean @default(true)
+  rates               ShippingRate[]
+  shipments           Shipment[]
+}
+
+model ShippingZone {
+  id        String   @id @default(cuid())
+  name      String
+  countries String   // codes ISO séparés par des virgules
+  cities    String?  // optionnel : restreindre à certaines villes
+  active    Boolean  @default(false)
+  rates     ShippingRate[]
+}
+
+model ShippingRate {
+  id          String  @id @default(cuid())
+  zoneId      String
+  zone        ShippingZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  carrierId   String
+  carrier     Carrier @relation(fields: [carrierId], references: [id])
+  service     String  // standard | express | international | pickup
+  currency    String
+  baseMinor   Int
+  perKgMinor  Int     @default(0)
+  freeAboveMinor Int?
+  minDays     Int
+  maxDays     Int
+  active      Boolean @default(true)
+}
+
+model Shipment {
+  id             String    @id @default(cuid())
+  orderId        String
+  order          Order     @relation(fields: [orderId], references: [id])
+  carrierId      String?
+  carrier        Carrier?  @relation(fields: [carrierId], references: [id])
+  trackingNumber String?
+  status         String    @default("preparing") // preparing | shipped | in_transit | delayed | delivered | damaged | returned
+  packages       Int       @default(1)
+  weightGrams    Int?
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+  proofFileId    String?
+  recipientName  String?
+  createdAt      DateTime  @default(now())
+}
+
+model ReturnRequest {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  reason    String
+  details   String?
+  status    String   @default("requested") // requested | approved | rejected | received | refunded
+  createdAt DateTime @default(now())
+}
+
+model Complaint {
+  id        String   @id @default(cuid())
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  kind      String   @default("general") // general | quality | delivery | billing
+  subject   String
+  body      String
+  status    String   @default("open") // open | in_progress | resolved | closed
+  createdAt DateTime @default(now())
+}
+
+// ───────────── Contenus, marketing, contacts ─────────────
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  kind      String   // contact | partnership | recruitment
+  name      String
+  email     String
+  phone     String?
+  company   String?
+  country   String?
+  subject   String
+  body      String
+  fileId    String?
+  status    String   @default("new")
+  createdAt DateTime @default(now())
+}
+
+model NewsletterSubscriber {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  locale      String    @default("fr")
+  consentAt   DateTime  @default(now())
+  unsubscribedAt DateTime?
+}
+
+model BlogPost {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  kind        String    @default("blog") // blog | news
+  locale      String    @default("fr")
+  title       String
+  excerpt     String
+  body        String
+  coverUrl    String?
+  publishedAt DateTime?
+  authorId    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Employee {
+  id         String    @id @default(cuid())
+  userId     String?   @unique
+  fullName   String
+  position   String
+  department String
+  email      String?
+  phone      String?
+  hiredAt    DateTime?
+  status     String    @default("active")
+  createdAt  DateTime  @default(now())
+}

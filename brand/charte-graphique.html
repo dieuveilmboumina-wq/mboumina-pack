@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MBOUMINA PACK — Charte graphique et guide de marque</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--vert:#183D30;--vert2:#315B45;--beige:#E7D9B8;--blanc:#FFFFFF;--noir:#171A18;--beige-ombre:#C8B68E}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,'Segoe UI',Arial,sans-serif;color:var(--noir);background:#FAF7EF;line-height:1.6}
+  header{background:var(--vert);color:var(--blanc);padding:56px 24px}
+  header .wrap{display:flex;gap:28px;align-items:center;flex-wrap:wrap}
+  h1,h2,h3{font-family:Fraunces,Georgia,serif;line-height:1.2}
+  h1{margin:0;font-size:2.4rem} h2{color:var(--vert);margin-top:56px;border-bottom:2px solid var(--beige);padding-bottom:8px}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  .grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .card{background:var(--blanc);border-radius:14px;padding:24px;box-shadow:0 1px 3px rgba(23,26,24,.08)}
+  .card img{width:100%;height:140px;object-fit:contain}
+  .swatch{height:110px;border-radius:12px;margin-bottom:10px;border:1px solid rgba(0,0,0,.08)}
+  code{background:#EFE7D3;padding:2px 6px;border-radius:4px}
+  .do{border-left:4px solid var(--vert2)} .dont{border-left:4px solid #A33}
+  table{width:100%;border-collapse:collapse;background:var(--blanc)} td,th{padding:10px;border-bottom:1px solid #eee;text-align:left}
+  footer{margin-top:64px;padding:32px 24px;background:var(--noir);color:var(--beige);text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <img src="logo-monochrome-blanc.svg" alt="Logo MBOUMINA PACK version blanche" width="300">
+    <div>
+      <h1>Charte graphique</h1>
+      <p>Guide d'utilisation de la marque MBOUMINA PACK — version 1.0, novembre 2026</p>
+    </div>
+  </div>
+</header>
+<main class="wrap">
+
+<h2>1. Le symbole</h2>
+<p>Le symbole représente une <strong>boîte ouverte vue d'angle</strong>. Sa silhouette dessine la lettre <strong>M</strong> de MBOUMINA. Une <strong>feuille</strong> sort de la boîte : elle évoque l'aliment protégé, le naturel et l'engagement vers des emballages plus responsables. Le symbole parle de distribution (la boîte livrée) sans représenter d'usine ni de machine.</p>
+
+<h2>2. Déclinaisons du logo</h2>
+<div class="grid">
+  <div class="card"><img src="logo-principal.svg" alt="Logo principal"><h3>Logo principal</h3><p>Version verticale avec signature. Couvertures, documents officiels, emballages.</p><code>logo-principal.svg</code></div>
+  <div class="card"><img src="logo-horizontal.svg" alt="Logo horizontal"><h3>Logo horizontal</h3><p>En-tête du site, factures, devis, signatures email.</p><code>logo-horizontal.svg</code></div>
+  <div class="card"><img src="logo-compact.svg" alt="Logo compact"><h3>Logo compact</h3><p>Espaces réduits : étiquettes, tampons, applications mobiles.</p><code>logo-compact.svg</code></div>
+  <div class="card"><img src="icone.svg" alt="Icône de marque"><h3>Icône de marque</h3><p>Favicon, avatar réseaux sociaux, icône d'application.</p><code>icone.svg</code></div>
+  <div class="card"><img src="logo-monochrome-noir.svg" alt="Logo monochrome noir"><h3>Monochrome noir</h3><p>Impression une couleur, tampons, fax, gravure.</p><code>logo-monochrome-noir.svg</code></div>
+  <div class="card" style="background:var(--vert)"><img src="logo-monochrome-blanc.svg" alt="Logo monochrome blanc"><h3 style="color:#fff">Monochrome blanc</h3><p style="color:var(--beige)">Sur fonds foncés et photos.</p><code>logo-monochrome-blanc.svg</code></div>
+</div>
+
+<h2>3. Couleurs officielles</h2>
+<div class="grid">
+  <div><div class="swatch" style="background:#183D30"></div><strong>Vert profond</strong><br>#183D30 · RGB 24 61 48<br>Couleur principale : fonds, titres, boutons.</div>
+  <div><div class="swatch" style="background:#315B45"></div><strong>Vert secondaire</strong><br>#315B45 · RGB 49 91 69<br>Survols, accents, liens.</div>
+  <div><div class="swatch" style="background:#E7D9B8"></div><strong>Beige naturel</strong><br>#E7D9B8 · RGB 231 217 184<br>Fonds de section, rappel carton/kraft.</div>
+  <div><div class="swatch" style="background:#FFFFFF"></div><strong>Blanc</strong><br>#FFFFFF<br>Fonds de contenu, respiration.</div>
+  <div><div class="swatch" style="background:#171A18"></div><strong>Noir élégant</strong><br>#171A18 · RGB 23 26 24<br>Texte courant, pied de page.</div>
+  <div><div class="swatch" style="background:#C8B68E"></div><strong>Beige ombré (dérivé)</strong><br>#C8B68E<br>Uniquement pour la face ombrée du symbole.</div>
+</div>
+<p>Contrastes vérifiés (WCAG) : texte blanc sur vert profond ≈ 11:1 (AAA) ; noir sur beige ≈ 13:1 (AAA) ; vert profond sur beige ≈ 8:1 (AAA). Ne pas mettre de texte beige sur blanc.</p>
+
+<h2>4. Typographies officielles</h2>
+<table>
+  <tr><th>Usage</th><th>Police</th><th>Exemple</th></tr>
+  <tr><td>Titres, logo</td><td>Fraunces (gras 700) — licence libre OFL</td><td style="font-family:Fraunces,serif;font-size:1.6rem;font-weight:700">Emballages alimentaires</td></tr>
+  <tr><td>Texte, interfaces, documents</td><td>Inter (400, 600, 700) — licence libre OFL</td><td style="font-family:Inter,sans-serif">Votre partenaire en solutions d'emballage alimentaire.</td></tr>
+  <tr><td>Secours</td><td>Georgia / Segoe UI / Arial</td><td>Quand les polices ne sont pas installées.</td></tr>
+</table>
+
+<h2>5. Règles d'utilisation</h2>
+<div class="grid">
+  <div class="card do"><h3>À faire</h3><ul>
+    <li>Laisser autour du logo une zone de protection égale à la hauteur de la feuille.</li>
+    <li>Taille minimale : icône 24 px à l'écran / 8 mm imprimée ; logo horizontal 120 px / 30 mm.</li>
+    <li>Utiliser la version blanche sur fonds verts ou photos sombres.</li>
+    <li>Utiliser la version noire pour l'impression une couleur.</li>
+  </ul></div>
+  <div class="card dont"><h3>À ne pas faire</h3><ul>
+    <li>Déformer, incliner ou étirer le logo.</li>
+    <li>Changer les couleurs hors palette.</li>
+    <li>Ajouter des ombres, contours ou dégradés.</li>
+    <li>Placer le logo sur un fond chargé sans contraste.</li>
+    <li>Associer le logo à des logos de certifications non obtenues.</li>
+  </ul></div>
+</div>
+
+<h2>6. Ton et messages</h2>
+<p><strong>Signature :</strong> « Votre partenaire en solutions d'emballage alimentaire. »</p>
+<p>Ton professionnel, clair et chaleureux. On parle de <em>distribution</em>, de <em>sélection</em>, de <em>partenaires</em> et d'<em>accompagnement</em>. On n'affirme jamais de capacité de production propre, de certification, de stock ou de délai non vérifiés.</p>
+
+<h2>7. Photographie</h2>
+<ul>
+  <li>Photos réelles des produits distribués, sur fond neutre beige ou blanc.</li>
+  <li>Pas de photos d'usines ou d'entrepôts présentées comme appartenant à MBOUMINA PACK.</li>
+  <li>Les images d'illustration (banques d'images) sont signalées comme telles si elles peuvent prêter à confusion.</li>
+</ul>
+
+<h2>8. Fichiers et production</h2>
+<p>Les logos sont livrés en SVG. Avant impression professionnelle, faire vectoriser les textes (conversion en contours) par l'imprimeur ou dans un logiciel vectoriel, pour ne pas dépendre des polices installées.</p>
+</main>
+<footer>MBOUMINA PACK — Fondateur : Dieuveil Flavien MBOUMINA BAKADISSA</footer>
+</body>
+</html>
