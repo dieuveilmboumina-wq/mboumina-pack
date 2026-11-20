@@ -39,4 +39,54 @@ h1, h2, h3 { font-family: var(--font-display); color: var(--color-vert); line-he
 .table td { padding: .55rem .7rem; border-bottom: 1px solid #eee; vertical-align: top; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+/* ───── Animations ───── */
+@keyframes mp-float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-14px) rotate(-2deg); } }
+@keyframes mp-spin { to { transform: rotate(360deg); } }
+@keyframes mp-fade-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes mp-pop { 0% { opacity: 0; transform: scale(.6) rotate(-6deg); } 70% { opacity: 1; transform: scale(1.06) rotate(1deg); } 100% { transform: none; } }
+@keyframes mp-rise { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
+@keyframes mp-pan { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+@keyframes mp-marquee { to { transform: translateX(-50%); } }
+@keyframes mp-shine { from { transform: translateX(-120%) skewX(-20deg); } to { transform: translateX(220%) skewX(-20deg); } }
+
+.anim-float { animation: mp-float 6s ease-in-out infinite; }
+.anim-float-delay { animation: mp-float 7s ease-in-out -2.5s infinite; }
+.anim-float-slow { animation: mp-float 9s ease-in-out -4s infinite; }
+.anim-spin-slow { animation: mp-spin 40s linear infinite; border-style: dashed; }
+.anim-fade-up { animation: mp-fade-up .8s cubic-bezier(.2,.7,.2,1) both; }
+.anim-delay-1 { animation-delay: .12s; } .anim-delay-2 { animation-delay: .24s; } .anim-delay-3 { animation-delay: .36s; }
+
+/* Apparition au défilement : le contenu reste visible sans JavaScript (classe ajoutée par <Reveal>) */
+.reveal-ready [data-reveal] { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); transition-delay: var(--reveal-delay, 0ms); }
+.reveal-ready [data-reveal].is-visible { opacity: 1; transform: none; }
+
+.lift { transition: transform .25s ease, box-shadow .25s ease; }
+.lift:hover { transform: translateY(-4px); box-shadow: 0 14px 30px -12px rgba(24,61,48,.35); }
+.lift:hover .lift-art { transform: scale(1.08) rotate(-3deg); }
+.lift-art { transition: transform .35s cubic-bezier(.2,.7,.2,1); }
+
+.btn { position: relative; overflow: hidden; }
+.btn-primary::after, .btn-secondary::after { content: ""; position: absolute; inset: 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); transform: translateX(-120%) skewX(-20deg); }
+.btn-primary:hover::after, .btn-secondary:hover::after { animation: mp-shine .7s ease; }
+
+.marquee { display: flex; width: max-content; animation: mp-marquee 40s linear infinite; }
+.marquee:hover { animation-play-state: paused; }
+
+.hero-bg { background: radial-gradient(1200px 500px at 85% 20%, rgba(49,91,69,.9), transparent 60%), radial-gradient(800px 400px at 10% 110%, rgba(231,217,184,.12), transparent 60%), var(--color-vert); }
+
+/* Film de présentation */
+.film-bg { background: linear-gradient(120deg, #183D30, #315B45, #1f4a39, #183D30); background-size: 300% 300%; animation: mp-pan 18s ease-in-out infinite alternate; }
+.film-in { animation: mp-fade-up .7s cubic-bezier(.2,.7,.2,1) both; }
+.film-pop { animation: mp-pop .7s cubic-bezier(.2,.7,.2,1) both; }
+.film-rise { animation: mp-rise .7s cubic-bezier(.2,.7,.2,1) both; }
+.film-btn { display: inline-flex; height: 2.25rem; width: 2.25rem; align-items: center; justify-content: center; border-radius: 999px; background: rgba(255,255,255,.12); color: #fff; font-weight: 700; }
+.film-btn:hover { background: rgba(255,255,255,.22); }
+
+/* Bouton WhatsApp flottant */
+.wa-float { position: fixed; right: 1.1rem; bottom: 1.1rem; z-index: 40; display: flex; height: 3.5rem; width: 3.5rem; align-items: center; justify-content: center; border-radius: 999px; background: #25D366; color: #fff; box-shadow: 0 10px 25px -8px rgba(0,0,0,.4); transition: transform .2s; }
+.wa-float:hover { transform: scale(1.08); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  .reveal-ready [data-reveal] { opacity: 1; transform: none; }
+}

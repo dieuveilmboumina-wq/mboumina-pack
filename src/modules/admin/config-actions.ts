@@ -12,10 +12,14 @@ type State = { error?: string; ok?: string } | undefined;
 const obj = (fd: FormData) => Object.fromEntries([...fd.entries()].filter(([, v]) => typeof v === "string")) as Record<string, string>;
 
 // ───── Paramètres ─────
-const SETTING_KEYS = ["company.legal", "contact.phone", "contact.whatsapp", "contact.email", "contact.address", "contact.hours", "payment.bank_details", "home.banner", "jobs.open_positions"];
+const SETTING_KEYS = ["company.legal", "contact.phone", "contact.whatsapp", "contact.email", "contact.address", "contact.hours", "payment.bank_details", "home.banner", "home.video_url", "jobs.open_positions"];
 export async function saveSettings(_: State, fd: FormData): Promise<State> {
   const u = await requireStaff("settings.edit");
   const f = obj(fd);
+  f["home.video_url"] = (f["home.video_url"] ?? "").trim();
+  if (f["home.video_url"] && !/^https:\/\/\S+$/.test(f["home.video_url"])) return { error: "La vidéo de présentation doit être une adresse https:// (YouTube, Vimeo ou fichier .mp4/.webm)." };
+  f["contact.whatsapp"] = (f["contact.whatsapp"] ?? "").trim();
+  if (f["contact.whatsapp"] && !/^\+?[0-9 ]{8,20}$/.test(f["contact.whatsapp"])) return { error: "Numéro WhatsApp invalide (format international, ex. +221 77 000 00 00)." };
   for (const key of SETTING_KEYS) {
     const value = (f[key] ?? "").slice(0, 4000);
     await db.setting.upsert({ where: { key }, create: { key, value }, update: { value } });

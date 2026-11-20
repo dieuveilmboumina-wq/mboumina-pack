@@ -14,6 +14,7 @@ const FIELDS: [string, string, boolean][] = [
   ["contact.hours", "Horaires", false],
   ["payment.bank_details", "Coordonnées bancaires pour virement (banque, titulaire, IBAN/RIB) — active le paiement par virement", true],
   ["home.banner", "Bannière d'annonce sur la page d'accueil (vide = masquée)", false],
+  ["home.video_url", "Vidéo de présentation (lien YouTube, Vimeo ou fichier https://….mp4) — vide = film animé intégré", false],
   ["jobs.open_positions", "Postes ouverts (page Recrutement)", true],
 ];
 

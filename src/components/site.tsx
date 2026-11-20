@@ -7,6 +7,7 @@ import { t, type Locale } from "@/i18n/dict";
 import { SECTOR_LINKS } from "@/content/pages";
 import { formatMoney } from "@/lib/money";
 import { displayPrice, availability, type ProductFull } from "@/modules/catalog/service";
+import { KraftBag, Cup, TakeawayBox, CategoryArt } from "@/components/illustrations";
 
 export function L({ locale, href, ...rest }: { locale: string; href: string } & Omit<React.ComponentProps<typeof Link>, "href">) {
   return <Link href={`/${locale}${href === "/" ? "" : href}`} {...rest} />;
@@ -134,14 +135,17 @@ export function ProductCard({ p, locale }: { p: ProductFull; locale: string }) {
   const av = availability(p);
   const img = p.media.find((m) => m.kind === "image");
   return (
-    <L locale={locale} href={`/produit/${p.slug}`} className="card group flex flex-col overflow-hidden transition hover:shadow-lg">
-      <div className="flex aspect-square items-center justify-center bg-beige/40">
+    <L locale={locale} href={`/produit/${p.slug}`} className="card lift group flex flex-col overflow-hidden">
+      <div className="flex aspect-square items-center justify-center overflow-hidden bg-beige/40">
         {img ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={img.url} alt={img.alt || p.nameFr} className="h-full w-full object-cover" loading="lazy" />
+          <img src={img.url} alt={img.alt || p.nameFr} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" />
         ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src="/brand/icone.svg" alt="" className="h-16 w-16 opacity-30" />
+          // Pas encore de photo : pictogramme de la famille d'emballage (signalé comme illustration)
+          <span className="flex flex-col items-center gap-2">
+            <CategoryArt slug={p.category?.slug ?? ""} className="lift-art h-24 w-24 opacity-80" />
+            <span className="text-[10px] uppercase tracking-wider text-noir/40">Illustration</span>
+          </span>
         )}
       </div>
       <div className="flex flex-1 flex-col gap-1 p-4">
@@ -161,11 +165,16 @@ export function ProductCard({ p, locale }: { p: ProductFull; locale: string }) {
 
 export function PageHeader({ title, intro, crumbs }: { title: string; intro?: string; crumbs?: React.ReactNode }) {
   return (
-    <div className="bg-beige/50">
-      <div className="mx-auto max-w-7xl px-4 py-10">
-        {crumbs && <div className="mb-2 text-sm text-noir/60">{crumbs}</div>}
-        <h1 className="text-3xl md:text-4xl">{title}</h1>
-        {intro && <p className="mt-3 max-w-3xl text-lg text-noir/80">{intro}</p>}
+    <div className="relative overflow-hidden bg-beige/50">
+      <div className="pointer-events-none absolute -right-4 top-1/2 hidden -translate-y-1/2 gap-2 opacity-40 md:flex" aria-hidden>
+        <KraftBag className="anim-float h-28 w-28" />
+        <Cup className="anim-float-delay mt-10 h-20 w-20" />
+        <TakeawayBox className="anim-float-slow h-28 w-28" />
+      </div>
+      <div className="relative mx-auto max-w-7xl px-4 py-10">
+        {crumbs && <div className="anim-fade-up mb-2 text-sm text-noir/60">{crumbs}</div>}
+        <h1 className="anim-fade-up anim-delay-1 max-w-3xl text-3xl md:text-4xl">{title}</h1>
+        {intro && <p className="anim-fade-up anim-delay-2 mt-3 max-w-3xl text-lg text-noir/80">{intro}</p>}
       </div>
     </div>
   );
