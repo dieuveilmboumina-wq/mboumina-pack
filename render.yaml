@@ -1,29 +1,32 @@
-# Blueprint Render — MBOUMINA PACK (aperçu privé).
-# Crée : un service web Node.js, une base PostgreSQL et un disque persistant pour les fichiers clients.
+# Blueprint Render — MBOUMINA PACK, APERÇU PRIVÉ GRATUIT.
+# Crée : un service web Node.js (offre gratuite) et une base PostgreSQL (offre gratuite).
 # Mode d'emploi : docs/06-publication-render.md
-# Région Francfort : la plus proche de l'Afrique de l'Ouest et centrale parmi celles proposées par Render.
+#
+# Limites de l'offre gratuite (à lever avant l'ouverture au public) :
+# - le service s'endort après 15 min sans visite (premier chargement ~1 min) ;
+# - la base gratuite expire 30 jours après sa création : passer en offre payante avant ;
+# - pas de disque persistant : les fichiers envoyés par les clients sont perdus à chaque redémarrage ;
+# - pas de preDeployCommand : migrations et données de référence sont appliquées au démarrage.
+# Pour la production : plan "starter", disque /var/data (UPLOAD_DIR=/var/data/uploads),
+# base "basic-256mb" et preDeployCommand — voir docs/06-publication-render.md.
 
 services:
   - type: web
     name: mboumina-pack
     runtime: node
     region: frankfurt
-    plan: starter # le disque persistant exige une offre payante
+    plan: free
     buildCommand: >-
       npm ci --include=dev &&
       node scripts/prisma-postgres.mjs --check &&
       npx prisma generate --schema prisma/postgres/schema.prisma &&
       npm run build
-    # Avant chaque mise en ligne : migrations de la base, puis données de référence (idempotent, n'écrase rien).
-    preDeployCommand: >-
+    # Au démarrage : migrations de la base, puis données de référence (idempotent, n'écrase rien), puis le site.
+    startCommand: >-
       npx prisma migrate deploy --schema prisma/postgres/schema.prisma &&
-      npx tsx prisma/seed.ts
-    startCommand: npm start
+      npx tsx prisma/seed.ts &&
+      npm start
     healthCheckPath: /api/health
-    disk:
-      name: fichiers-clients
-      mountPath: /var/data
-      sizeGB: 1
     envVars:
       - key: NODE_VERSION
         value: "22"
@@ -36,7 +39,7 @@ services:
       - key: APP_SECRET
         generateValue: true # secret aléatoire généré par Render, jamais versionné
       - key: UPLOAD_DIR
-        value: /var/data/uploads
+        value: /tmp/uploads # éphémère en offre gratuite
       - key: PAYMENT_TEST_MODE
         value: "false" # le simulateur est de toute façon refusé en production
       # À saisir dans le tableau de bord Render lors de la création (jamais dans ce fichier) :
@@ -52,7 +55,7 @@ services:
 databases:
   - name: mboumina-db
     region: frankfurt
-    plan: basic-256mb
+    plan: free
     databaseName: mboumina
     user: mboumina
     postgresMajorVersion: "16"

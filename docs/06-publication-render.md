@@ -8,6 +8,21 @@ Le code est prêt :
 
 Les étapes ci-dessous créent des comptes et engagent des frais : **elles sont à faire par vous**. Comptez environ 30 minutes.
 
+> **État actuel (20/11/2026) : aperçu GRATUIT.** `render.yaml` utilise les offres gratuites de Render (aucune carte enregistrée). Le dépôt GitHub a été rendu **public** : Render n'avait pas pu être relié à GitHub. Il ne contient aucun secret.
+>
+> Limites de l'aperçu gratuit :
+> - le site s'endort après 15 min sans visite ;
+> - **la base expire 30 jours après sa création** ;
+> - les fichiers envoyés par les clients sont perdus à chaque redémarrage.
+>
+> **Avant l'ouverture au public, revenez à la configuration de production :**
+> - service et base : offres `starter` et `basic-256mb` ;
+> - disque `/var/data` avec `UPLOAD_DIR=/var/data/uploads` ;
+> - `preDeployCommand` pour les migrations et le seed ;
+> - dépôt GitHub remis en privé, avec la connexion GitHub de Render.
+>
+> Les étapes ci-dessous décrivent cette configuration de production.
+
 ---
 
 ## 1. Mettre le code sur GitHub (dépôt privé)
